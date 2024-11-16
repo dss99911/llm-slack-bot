@@ -1,3 +1,4 @@
 slack_bolt
 langchain-aws
 langchain
+python-dotenv
