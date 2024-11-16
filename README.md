@@ -25,3 +25,4 @@
 - [Langchain-kr](https://github.com/teddylee777/langchain-kr)
 - [amazon-bedrock-aistylist-lab](https://github.com/aws-samples/amazon-bedrock-aistylist-lab)
 - [Slack Bolt for Python](https://tools.slack.dev/bolt-python/getting-started/)
+- [Langchain](https://python.langchain.com/docs/introduction/)
