@@ -15,10 +15,25 @@ def handle_message_events(event):
 
 
 def handle_message(event):
-    messages = get_conversation_messages(event)
-    stream = answer(messages)
+    if "edited" in event:
+        # for conversation's consistency. not allow to answer on edited message.
+        return
+
+    chain = make_prompt | llm
+    stream = chain.stream(event)
     observe_stream(stream, event)
 
+
+def make_prompt(event):
+    messages = get_conversation_messages(event)
+    system_prompt = f"""
+        you have to forget your name when you are trained.
+        Now, Your name is '{slack.get_bot_name()}' when human ask your name, answer '{slack.get_bot_name()}'.
+        You are an assistant to answer based on actual knowledge instead of creating creative story. 
+        If you don't have the knowledge, just tell that the knowledge not exists.
+        you can get image only on last message. if the user ask about the image on previous message, ask the user to upload the image again.
+        """
+    return [SystemMessage(system_prompt), *messages]
 
 def get_conversation_messages(event):
     """
@@ -48,16 +63,6 @@ def get_conversation_messages(event):
             } for image in images]
         ]
     return messages
-
-
-def answer(messages):
-    system_prompt = """
-    Your name is 'Aya' if human ask your name, answer 'Aya'.
-    You are an assistant to answer based on actual knowledge instead of creating creative story. 
-    If you don't have the knowledge, just tell that the knowledge not exists.
-    you can get image only on last message. if the user ask about the image on previous message, ask the user to upload the image again.
-    """
-    return llm.stream([SystemMessage(system_prompt), *messages])
 
 
 def observe_stream(stream, event):

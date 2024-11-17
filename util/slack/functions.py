@@ -83,6 +83,11 @@ def update_message(text, channel, ts):
 
 
 @memoize
+def get_bot_name():
+    return get_user_real_name(get_bot_user_id())
+
+
+@memoize
 def get_bot_user_id():
     response = client.auth_test()
     return response["user_id"]
