@@ -1,3 +1,6 @@
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableParallel
+
 from config import *
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from util.slack import functions as slack
@@ -19,13 +22,22 @@ def handle_message(event):
         # for conversation's consistency. not allow to answer on edited message.
         return
 
-    chain = make_prompt | llm
     stream = chain.stream(event)
     observe_stream(stream, event)
 
 
-def make_prompt(event):
-    messages = get_conversation_messages(event)
+def make_chain():
+    combined = RunnableParallel(system=system_prompt, conversation=conversation_prompt, question=question_prompt)
+    chat_prompt = ChatPromptTemplate.from_messages([
+        MessagesPlaceholder(variable_name="system"),
+        MessagesPlaceholder(variable_name="conversation"),
+        MessagesPlaceholder(variable_name="question")
+    ])
+
+    return combined | chat_prompt | llm
+
+
+def system_prompt(input):
     system_prompt = f"""
         you have to forget your name when you are trained.
         Now, Your name is '{slack.get_bot_name()}' when human ask your name, answer '{slack.get_bot_name()}'.
@@ -33,36 +45,40 @@ def make_prompt(event):
         If you don't have the knowledge, just tell that the knowledge not exists.
         you can get image only on last message. if the user ask about the image on previous message, ask the user to upload the image again.
         """
-    return [SystemMessage(system_prompt), *messages]
 
-def get_conversation_messages(event):
+    return [SystemMessage(system_prompt)]
+
+
+def conversation_prompt(event):
     """
     if thread messages exist more than limit,
     first message is the thread's first message.
     other messages are the latest messages order by date asc (last message is the latest message)
+
+    todo delete last message in the conversation if it's same with the event.
     """
     thread_ts = event.get("thread_ts")
     if thread_ts is None:
-        messages = [HumanMessage(role=slack.get_user_real_name(event["user"]), content=event["text"])]
-    else:
-        conversation = slack.client.conversations_replies(channel=event["channel"], ts=thread_ts, limit=30)["messages"]
-        messages = convert_conversation_to_messages(conversation)
+        return []
 
-    for message in messages:
-        if not message.content:
-            message.content = "[empty message]"
+    conversation = slack.client.conversations_replies(channel=event["channel"], ts=thread_ts, limit=conversation_count_limit)["messages"]
+    messages = convert_conversation_to_messages(conversation)
+    return messages
+
+
+def question_prompt(event):
+    message = HumanMessage(role=slack.get_user_real_name(event["user"]), content=event["text"] or empty_content)
 
     images = slack.get_encoded_images(event)
     if images:
-        last_message = messages[-1]
-        last_message.content = [
-            last_message.content,
+        message.content = [
+            message.content,
             *[{
                 "type": "image_url",
                 "image_url": {"url": f"{image}"},
             } for image in images]
         ]
-    return messages
+    return [message]
 
 
 def observe_stream(stream, event):
@@ -81,11 +97,12 @@ def convert_conversation_to_messages(conversation):
             message = AIMessage(text)
         else:
             user_name = slack.get_user_real_name(user_id)
-            message = HumanMessage(role=user_name, content=text)
+            message = HumanMessage(role=user_name, content=text or empty_content)
 
         messages.append(message)
     return messages
 
 
 if __name__ == '__main__':
+    chain = make_chain()
     slack.start()
