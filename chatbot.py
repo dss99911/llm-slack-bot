@@ -1,9 +1,12 @@
+import logging
+
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableParallel
 
 from config import *
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from util.slack import functions as slack
+from util.slack.functions import SlackEvent
 
 
 @slack.app.event("app_mention")
@@ -18,12 +21,17 @@ def handle_message_events(event):
 
 
 def handle_message(event):
-    if "edited" in event:
-        # for conversation's consistency. not allow to answer on edited message.
-        return
+    event = SlackEvent(event)
 
-    stream = chain.stream(event)
-    observe_stream(stream, event)
+    if event.is_edited():
+        return  # for conversation's consistency. not allow to answer on edited message.
+
+    try:
+        stream = chain.stream(event)
+        observe_stream(stream, event)
+    except Exception as e:
+        event.reply_on_thread(f"Error occurred: {e}")
+        logging.exception(e)
 
 
 def make_chain():
@@ -49,7 +57,7 @@ def system_prompt(input):
     return [SystemMessage(system_prompt)]
 
 
-def conversation_prompt(event):
+def conversation_prompt(event: SlackEvent):
     """
     if thread messages exist more than limit,
     first message is the thread's first message.
@@ -57,19 +65,19 @@ def conversation_prompt(event):
 
     todo delete last message in the conversation if it's same with the event.
     """
-    thread_ts = event.get("thread_ts")
-    if thread_ts is None:
+
+    if not event.is_in_thread():
         return []
 
-    conversation = slack.client.conversations_replies(channel=event["channel"], ts=thread_ts, limit=conversation_count_limit)["messages"]
+    conversation = event.get_thread_conversation()
     messages = convert_conversation_to_messages(conversation)
     return messages
 
 
-def question_prompt(event):
-    message = HumanMessage(role=slack.get_user_real_name(event["user"]), content=event["text"] or empty_content)
+def question_prompt(event: SlackEvent):
+    message = HumanMessage(role=event.user_name, content=event.text or empty_content)
 
-    images = slack.get_encoded_images(event)
+    images = event.get_encoded_images()
     if images:
         message.content = [
             message.content,
