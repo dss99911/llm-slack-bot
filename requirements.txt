@@ -1,5 +1,6 @@
 slack_bolt
-langchain-aws
 langchain
+langchain-openai
+langchain-aws
 python-dotenv
 langchain-openai

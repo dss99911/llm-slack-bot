@@ -3,6 +3,7 @@ import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
 import requests
 from slack_bolt import App
@@ -22,7 +23,8 @@ executor = ThreadPoolExecutor(max_workers=20)
 class SlackEvent:
     def __init__(self, event):
         self.event = event
-
+        self.replied_ts = None
+        self.replied_channel = None
 
     @property
     def channel(self):
@@ -56,14 +58,61 @@ class SlackEvent:
     def files(self):
         return self.event.get("files")
 
+    @property
+    def shortcut(self):
+        return self.event.get("shortcut") or False
+
     def is_edited(self):
         return self.edited is not None
 
     def is_in_thread(self):
         return self.thread_ts is not None
 
-    def reply_on_thread(self, message):
-        send_message(message, self.channel, self.ts)
+    def reply_message(self, message):
+        self.replied_ts = None
+        self.replied_channel = None
+
+        response = send_message(message,
+                                channel=self.user if self.shortcut else self.channel,
+                                thread_ts=None if self.shortcut else self.ts)
+        self.replied_ts = response["ts"]
+        self.replied_channel = response["channel"]
+        return response
+
+    def update_message(self, message):
+        update_message(message, self.replied_channel, self.replied_ts)
+
+    def reply_stream(self, stream, prefix=None):
+        tokens = []
+        if prefix:
+            tokens.append(prefix)
+        stop_event = threading.Event()
+        future = executor.submit(partial(self.loop_update_message, tokens, stop_event))
+        try:
+            for token in stream:
+                tokens.append(token.content)
+        finally:
+            stop_event.set()
+            future.result()
+
+    def loop_update_message(self, tokens, stop_event):
+        while True:
+            # no token to reply -> wait
+            # completed -> update finally and break the loop
+
+            completed = stop_event.is_set()
+
+            if tokens:
+                message = "".join(tokens)
+                if self.replied_ts is None:
+                    self.reply_message(message)
+                else:
+                    self.update_message(message)
+            else:
+                time.sleep(0.5)
+
+            if completed:
+                break
 
     def get_thread_conversation(self, limit=conversation_count_limit):
         return client.conversations_replies(channel=self.channel, ts=self.thread_ts, limit=limit)["messages"]
@@ -83,50 +132,6 @@ class SlackEvent:
             if file.get('mimetype', '').startswith('image/'):
                 image_urls.append(file.get('url_private'))
         return image_urls
-
-
-
-class ParallelSender:
-    def __init__(self, event: SlackEvent):
-        self.event = event
-        self.tokens = []
-        self.stop_event = threading.Event()
-        self.replied_ts = None
-
-    def add_token(self, token):
-        self.tokens.append(token.content)
-
-    def update_message_in_thread(self):
-        return executor.submit(self.thread_update_message)
-
-    def thread_update_message(self):
-        while True:
-            # no token to reply -> wait
-            # completed -> update finally and break the loop
-
-            completed = self.stop_event.is_set()
-
-            if self.tokens:
-                message = "".join(self.tokens)
-
-                if self.replied_ts is None:
-                    self.replied_ts = send_message(message, self.event.channel, self.event.ts)["ts"]
-                else:
-                    update_message(message, self.event.channel, self.replied_ts)
-            else:
-                time.sleep(0.5)
-
-            if completed:
-                break
-
-    def __enter__(self):
-        self.future = self.update_message_in_thread()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop_event.set()
-        self.future.result()
-
 
 
 def send_message(text, channel, thread_ts):
