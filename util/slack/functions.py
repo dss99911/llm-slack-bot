@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
 import requests
+from attr import dataclass
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
@@ -20,15 +21,19 @@ client = app.client
 
 executor = ThreadPoolExecutor(max_workers=20)
 
+@dataclass
 class SlackEvent:
-    def __init__(self, event):
-        self.event = event
-        self.replied_ts = None
-        self.replied_channel = None
+    event: dict
+    replied_ts = None
+    replied_channel = None
 
     @property
     def channel(self):
         return self.event["channel"]
+
+    @property
+    def channel_type(self):
+        return self.event["channel_type"]
 
     @property
     def ts(self):
@@ -40,7 +45,7 @@ class SlackEvent:
 
     @property
     def thread_ts(self):
-        return self.event.get("thread_ts")
+        return self.event.get("thread_ts") or self.ts
 
     @property
     def user(self):
@@ -62,11 +67,14 @@ class SlackEvent:
     def shortcut(self):
         return self.event.get("shortcut") or False
 
+    def is_direct_message(self):
+        return self.channel_type == "im"
+
     def is_edited(self):
         return self.edited is not None
 
     def is_in_thread(self):
-        return self.thread_ts is not None
+        return self.event.get("thread_ts") is not None
 
     def reply_message(self, message):
         self.replied_ts = None
@@ -90,7 +98,7 @@ class SlackEvent:
         future = executor.submit(partial(self.loop_update_message, tokens, stop_event))
         try:
             for token in stream:
-                tokens.append(token.content)
+                tokens.append(token)
         finally:
             stop_event.set()
             future.result()
