@@ -3,6 +3,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from config import empty_content
 from util.slack.functions import SlackEvent
 from util.slack import functions as slack
+import re
 
 
 def system_prompt(event: SlackEvent):
@@ -56,11 +57,13 @@ def convert_conversation_to_messages(conversation):
     messages = []
     for message in conversation:
         if "user" in message:
-            user_name = slack.get_user_real_name(message["user"])
+            user_name = slack.get_user_name(message["user"])
         else:
             user_name = message["username"] # the bot case
 
         content = message["text"] or empty_content
+        content = convert_user_id_to_name(content)
+
         if user_name == slack.get_bot_name():
             continue  # bot answer already saved. so, no need to get
         else:
@@ -73,6 +76,7 @@ def convert_conversation_to_messages(conversation):
 
 def question_prompt(event: SlackEvent):
     content = event.text or empty_content
+    content = convert_user_id_to_name(content)
     message = HumanMessage(role=event.user_name, content=f"{event.user_name}: {content}", id=event.ts)
 
     images = event.get_encoded_images()
@@ -93,3 +97,13 @@ def get_personalized_prompt(user_id):
         return [SystemMessage("답변은 항상 한국어로 해주세요.")]
     else:
         return []
+
+
+def convert_user_id_to_name(content):
+    user_ids = re.findall(r"<@([A-Z0-9]+)>", content)
+
+    for user_id in user_ids:
+        user_name = slack.get_user_name(user_id)
+        content = content.replace(f"<@{user_id}>", f"@{user_name}")
+
+    return content

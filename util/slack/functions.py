@@ -33,7 +33,7 @@ class SlackEvent:
 
     @property
     def channel_type(self):
-        return self.event["channel_type"]
+        return self.event.get("channel_type")
 
     @property
     def ts(self):
@@ -53,7 +53,7 @@ class SlackEvent:
 
     @property
     def user_name(self):
-        return get_user_real_name(self.user)
+        return get_user_name(self.user)
 
     @property
     def text(self):
@@ -162,7 +162,7 @@ def update_message(text, channel, ts):
 
 @memoize
 def get_bot_name():
-    return get_user_real_name(get_bot_user_id())
+    return get_user_name(get_bot_user_id())
 
 
 @memoize
@@ -172,7 +172,7 @@ def get_bot_user_id():
 
 
 @memoize
-def get_user_real_name(user_id):
+def get_user_name(user_id):
     response = client.users_info(user=user_id)
     real_name = response["user"]["profile"]["real_name"]
     return real_name

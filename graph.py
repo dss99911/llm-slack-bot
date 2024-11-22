@@ -7,6 +7,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import MessagesState
+from langgraph.graph.message import add_messages
 
 
 class State(MessagesState):
@@ -24,14 +25,13 @@ def prompt(state: State):
     messages = []
 
     if len(state["messages"]) == 0:
-        messages.extend(system_prompt(event))
+        messages = add_messages(messages, system_prompt(event))
         if event.is_direct_message():
-            messages.extend(get_personalized_prompt(event.user))
+            messages = add_messages(messages, get_personalized_prompt(event.user))
 
-    #todo 과거 히스토리 중복 없이 잘 update하는지 확인
-    messages.extend(conversation_prompt(event))
-    #todo question prompt가 conversation prompt overwrite하는지 확인. 이미지 있는 경우로 테스트
-    messages.extend(question_prompt(event))
+    messages = add_messages(messages, conversation_prompt(event))
+    messages = add_messages(messages, question_prompt(event))
+
 
     return {"messages": messages}
 
