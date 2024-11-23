@@ -21,11 +21,10 @@ client = app.client
 
 executor = ThreadPoolExecutor(max_workers=20)
 
+
 @dataclass
 class SlackEvent:
     event: dict
-    replied_ts = None
-    replied_channel = None
 
     @property
     def channel(self):
@@ -63,10 +62,6 @@ class SlackEvent:
     def files(self):
         return self.event.get("files")
 
-    @property
-    def shortcut(self):
-        return self.event.get("shortcut") or False
-
     def is_direct_message(self):
         return self.channel_type == "im"
 
@@ -77,56 +72,31 @@ class SlackEvent:
         return self.event.get("thread_ts") is not None
 
     def reply_message(self, message):
-        self.replied_ts = None
-        self.replied_channel = None
+        executor.submit(partial(send_message, message, channel=self.channel, thread_ts=self.ts))
 
-        response = send_message(message,
-                                channel=self.user if self.shortcut else self.channel,
-                                thread_ts=None if self.shortcut else self.ts)
-        self.replied_ts = response["ts"]
-        self.replied_channel = response["channel"]
-        return response
-
-    def update_message(self, message):
-        update_message(message, self.replied_channel, self.replied_ts)
-
-    def reply_stream(self, stream, prefix=None):
-        tokens = []
-        if prefix:
-            tokens.append(prefix)
+    def reply_stream(self, stream):
         stop_event = threading.Event()
-        future = executor.submit(partial(self.loop_update_message, tokens, stop_event))
+        reply_tokens = []
+        future = executor.submit(partial(self._loop_update_message, reply_tokens, stop_event))
         try:
             for token in stream:
-                tokens.append(token)
+                reply_tokens.append(token)
         finally:
             stop_event.set()
             future.result()
 
-    def loop_update_message(self, tokens, stop_event):
-        while True:
-            # no token to reply -> wait
-            # completed -> update finally and break the loop
-
-            completed = stop_event.is_set()
-
-            if tokens:
-                message = "".join(tokens)
-                if self.replied_ts is None:
-                    self.reply_message(message)
-                else:
-                    self.update_message(message)
-            else:
-                time.sleep(0.5)
-
-            if completed:
-                break
+    def reply_button_message(self, message, button_text, action_id):
+        send_message([{"type": "section", "text": {"type": "mrkdwn", "text": message},
+                              "accessory": {"type": "button", "action_id": action_id,
+                                            "text": {"type": "plain_text", "text": button_text}}}],
+                     channel=self.channel,
+                     thread_ts=self.ts)
 
     def get_thread_conversation(self, limit=conversation_count_limit):
         return client.conversations_replies(channel=self.channel, ts=self.thread_ts, limit=limit)["messages"]
 
     def get_encoded_images(self):
-        image_urls = self.extract_image_urls()
+        image_urls = self._extract_image_urls()
         base64_images = []
         for url in image_urls:
             base64_data = download_and_encode_image(url)
@@ -134,7 +104,32 @@ class SlackEvent:
                 base64_images.append(base64_data)
         return base64_images
 
-    def extract_image_urls(self):
+    def _loop_update_message(self, reply_tokens, stop_event):
+        message_replied = ""
+        reply_ts = None
+        reply_channel = None
+
+        while True:
+            completed = stop_event.is_set()
+
+            message = "".join(reply_tokens)
+            if message == message_replied:
+                # if no token added or not yet added new token after the message sent
+                time.sleep(0.3)
+            else:
+                if reply_ts is None:
+                    response = send_message(message, channel=self.channel, thread_ts=self.ts)
+                    reply_ts = response["ts"]
+                    reply_channel = response["channel"]
+                else:
+                    update_message(message, reply_channel, reply_ts)
+                message_replied = message
+
+            if completed:
+                # if completed, update finally and break the loop
+                break
+
+    def _extract_image_urls(self):
         image_urls = []
         for file in self.files or []:
             if file.get('mimetype', '').startswith('image/'):
@@ -142,12 +137,12 @@ class SlackEvent:
         return image_urls
 
 
-def send_message(text, channel, thread_ts):
-    response = client.chat_postMessage(
-        channel=channel,
-        text=text,
-        thread_ts=thread_ts
-    )
+def send_message(text_or_block, channel, thread_ts):
+    key = "blocks" if isinstance(text_or_block, list) else "text"
+
+    response = client.chat_postMessage(**{"channel": channel,
+                                          "thread_ts": thread_ts,
+                                          key: text_or_block})
     return response
 
 

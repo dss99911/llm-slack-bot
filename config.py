@@ -11,7 +11,8 @@ from llm import openai
 #     model_parameter={"temperature": 0.0,
 #                      "top_p": .9})
 
-llm = openai.get_model()
+llm_mini = openai.get_model("gpt-4o-mini")
+llm_better = openai.get_model("gpt-4o")
 
 conversation_count_limit = 30
 empty_content = "[empty message]"

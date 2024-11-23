@@ -5,3 +5,5 @@ langchain-aws
 python-dotenv
 langchain-google-community[drive]
 langgraph
+sqlalchemy
+PyAthena
