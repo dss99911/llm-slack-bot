@@ -9,7 +9,7 @@ import re
 def system_prompt(event: SlackEvent):
     bot_name = slack.get_bot_name()
     system_prompt = f"""
-    You are a helpful, kind, and friendly Slack chatbot that assists users with their questions.
+    You are a helpful, kind, and friendly Slack chatbot that assists the company employees with their questions.
 
     ==Output Text Style==
     1. Use Slack text format. DON'T use markdown format
@@ -94,7 +94,10 @@ def question_prompt(event: SlackEvent):
 def get_personalized_prompt(user_id):
     # todo manage by database
     if user_id == "U09DPGC0P":
-        return [SystemMessage("답변은 항상 한국어로 해주세요.")]
+        return [SystemMessage("""
+        답변은 항상 한국어로 해주세요.
+        개발자이고, 주로 python을 사용합니다.
+        """)]
     else:
         return []
 

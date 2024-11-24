@@ -92,6 +92,10 @@ class SlackEvent:
                      channel=self.channel,
                      thread_ts=self.ts)
 
+    def reply_file(self, text, file_path=None, content=None):
+        upload_file(self.channel, self.thread_ts, text, file_path, content)
+
+
     def get_thread_conversation(self, limit=conversation_count_limit):
         return client.conversations_replies(channel=self.channel, ts=self.thread_ts, limit=limit)["messages"]
 
@@ -137,12 +141,12 @@ class SlackEvent:
         return image_urls
 
 
-def send_message(text_or_block, channel, thread_ts):
+def send_message(text_or_block, channel, thread_ts=None):
     key = "blocks" if isinstance(text_or_block, list) else "text"
 
     response = client.chat_postMessage(**{"channel": channel,
-                                          "thread_ts": thread_ts,
-                                          key: text_or_block})
+                                          key: text_or_block},
+                                       **{"thread_ts": thread_ts} if thread_ts else {})
     return response
 
 
@@ -183,6 +187,23 @@ def download_and_encode_image(url):
     else:
         mime_type = "image/unknown"
     return f"data:{mime_type};base64,{base64.b64encode(response.content).decode('utf-8')}"
+
+
+def upload_file(channel_id, thread_ts, message, file_path, content=None):
+    """
+    :param content: create file based on text. only one of file_path or content can be used.
+    :return:
+    """
+    response = client.files_upload(
+        channels=channel_id,
+        thread_ts=thread_ts,
+        file=file_path,
+        content=content,
+        initial_comment=message
+    )
+    if not response.get("ok"):
+        raise Exception(f"Failed to upload image: {response}")
+    return response
 
 
 def start():
