@@ -1,12 +1,5 @@
-
-from dotenv import load_dotenv
+from imports import *
 from langchain_text_splitters import RecursiveCharacterTextSplitter, CharacterTextSplitter
-
-load_dotenv()
-from dataclasses import dataclass
-from typing import Literal
-from itertools import chain
-
 
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, \
     UnstructuredPowerPointLoader, WebBaseLoader
@@ -69,11 +62,9 @@ metadata_list = [
     Data(name='fp', path='data/fp.jsonl', source='data/fp.jsonl', format='jsonl'),
     Data(name='da_risk_mgmt', path='data/da_risk_mgmt.jsonl', source='data/da_risk_mgmt.jsonl', format='jsonl'),
     Data(name='bi_temp', path='data/bi_temp.jsonl', source='data/bi_temp.jsonl', format='jsonl'),
-    Data(name='mart', path='data/mart.jsonl', source='data/mart.jsonl', format='jsonl'),
     Data(name='log', path='data/log.jsonl', source='data/log.jsonl', format='jsonl'),
     Data(name='da_common', path='data/da_common.jsonl', source='data/da_common.jsonl', format='jsonl'),
     Data(name='da_backend', path='data/da_backend.jsonl', source='data/da_backend.jsonl', format='jsonl'),
-    Data(name='serverlog', path='data/serverlog.jsonl', source='data/serverlog.jsonl', format='jsonl'),
     Data(name='facts', path='data/facts.jsonl', source='data/facts.jsonl', format='jsonl'),
     Data(name='tx', path='data/tx.jsonl', source='data/tx.jsonl', format='jsonl'),
     Data(name='lms', path='data/lms.jsonl', source='data/lms.jsonl', format='jsonl'),

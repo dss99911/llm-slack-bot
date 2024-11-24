@@ -1,10 +1,8 @@
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
-from config import empty_content
-from util.slack.functions import SlackEvent
-from util.slack import functions as slack
-import re
+from imports import *
 
+empty_content = "[empty message]"
 
 def system_prompt(event: SlackEvent):
     bot_name = slack.get_bot_name()
@@ -28,9 +26,22 @@ def system_prompt(event: SlackEvent):
     
     Ensure all responses follow these rules and maintain a professional yet approachable tone.
     """
+
+    if event.is_direct_message() and get_personalized_prompt(event.user):
+        # some model doesn't allow multiple SystemMessage
+        system_prompt += f"\n==User Instruction==\n{get_personalized_prompt(event.user)}"
+
     prompts = [SystemMessage(system_prompt)]
 
     return prompts
+
+
+def thread_link_prompt(event: SlackEvent):
+    messages = []
+    for channel, thread_ts in event.get_slack_link_channel_thread_ts():
+        conversation = slack.get_thread_conversation(channel, thread_ts)
+        messages.append(convert_conversation_to_messages(conversation, True))
+    return messages
 
 
 def conversation_prompt(event: SlackEvent):
@@ -53,7 +64,7 @@ def conversation_prompt(event: SlackEvent):
     return messages
 
 
-def convert_conversation_to_messages(conversation):
+def convert_conversation_to_messages(conversation, include_bot_message=False):
     messages = []
     for message in conversation:
         if "user" in message:
@@ -65,7 +76,9 @@ def convert_conversation_to_messages(conversation):
         content = convert_user_id_to_name(content)
 
         if user_name == slack.get_bot_name():
-            continue  # bot answer already saved. so, no need to get
+            if not include_bot_message:
+                continue  # bot answer already saved. so, no need to get. and also, doesn't know id, so, not easy to replace
+            message = AIMessage(content=content, id=message["ts"])
         else:
             # if the message already exists, update the existing message
             message = HumanMessage(content=f"{user_name}: {content}", id=message["ts"])
@@ -94,12 +107,12 @@ def question_prompt(event: SlackEvent):
 def get_personalized_prompt(user_id):
     # todo manage by database
     if user_id == "U09DPGC0P":
-        return [SystemMessage("""
-        답변은 항상 한국어로 해주세요.
-        개발자이고, 주로 python을 사용합니다.
-        """)]
+        return """
+        - 답변은 항상 한국어로 해주세요.
+        - 개발자이고, 주로 python을 사용합니다.
+        """
     else:
-        return []
+        return None
 
 
 def convert_user_id_to_name(content):

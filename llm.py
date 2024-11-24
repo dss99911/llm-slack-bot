@@ -1,10 +1,7 @@
-from typing import Optional
-import boto3
+from imports import *
 
 from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI
-
-from util.aws import aws_region_name
 
 
 def get_bedrock_client(runtime: Optional[bool] = True):
@@ -32,12 +29,13 @@ def get_model_openai(model_name):
                       max_tokens=2048,  # 최대 토큰수
                       model_name=model_name)  # 모델명
 
-llm_mini = get_model_bedrock(
-    # "meta.llama3-8b-instruct-v1:0",
-    "anthropic.claude-3-sonnet-20240229-v1:0",
-    model_parameter={"temperature": 0.0,
-                     "top_p": .9})
+# todo sonnet 성능이 너무 안좋은 듯.. 적절한 tool을 사용 못함
+# llm_mini = get_model_bedrock(
+#     # "meta.llama3-8b-instruct-v1:0",
+#     "anthropic.claude-3-sonnet-20240229-v1:0",
+#     model_parameter={"temperature": 0.0,
+#                      "top_p": .9})
 
-# llm_mini = openai.get_model("gpt-4o-mini")
+llm_mini = get_model_openai("gpt-4o-mini")
 llm_better = get_model_openai("gpt-4o")
 

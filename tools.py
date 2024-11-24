@@ -1,4 +1,4 @@
-from typing import Annotated
+from imports import *
 
 from langchain_core.tools import tool
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -6,15 +6,9 @@ from langchain_experimental.tools import PythonREPLTool
 from langchain.tools.retriever import create_retriever_tool
 from langgraph.prebuilt import InjectedState
 
+from prompt import convert_conversation_to_messages
 from retriever import get_metadata_retriever, get_company_retriever
-from util.slack import SlackEvent
-import uuid
 
-import awswrangler as wr
-import boto3
-
-from util.aws.base import aws_region_name
-import pandas as pd
 
 python_tool = PythonREPLTool()
 
@@ -80,6 +74,25 @@ def show_image_tool(image_path, summary, state: Annotated[dict, InjectedState]):
     # upload_image_file("@hyun", "image", image_path)
 
 
-tools = [search_tool, python_tool, retrieve_metadata_tool, retrieve_company_tool, read_and_save_temp_data_by_sql, show_image_tool]
+@tool
+def get_slack_thread_conversation(slack_link_url, channel, ts, thread_ts):
+    """
+    fetch slack thread conversation by the slack link.
+    If there is the slack link on user's message, this tool should be invoked. and add the conversation to the message
+
+    slack link format is like https://{company_name}.slack.com/archives/{channel}/p{ts}?thread_ts={thread_ts}&cid={channel}
+    so, other than slack link is received, this tool should not be invoked
+    :return: slack message
+    todo consider to use prompt instead of tool.
+        tool을 쓰면, llm 을 한번 더 호출해서 그렇긴 한데, 더 명시적으로 스레드 대화 내용을 가져와서, AI가 이해하는게 더 수월
+        prompt를 쓰면서도, 명시적으로 이게 현재 대화내용과 다른 스레드의 대화 내용이라는 걸 명시할 수 있는 방법이 있으면, prompt에서 하기
+    """
+    thread_ts = thread_ts or ts
+    if "." not in thread_ts:
+        thread_ts = thread_ts[:-6] + '.' + thread_ts[-6:]
+    conversation = slack.get_thread_conversation(channel, thread_ts)
+    return convert_conversation_to_messages(conversation, True)
+
+tools = [search_tool, python_tool, retrieve_metadata_tool, retrieve_company_tool, read_and_save_temp_data_by_sql, show_image_tool, get_slack_thread_conversation]
 
 tool_names_approval = [read_and_save_temp_data_by_sql.name]

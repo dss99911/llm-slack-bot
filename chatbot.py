@@ -1,9 +1,6 @@
-import logging
-
 from graph import stream_graph
+from imports import *
 from permission import get_user_permission, PERMISSION_NO
-from util.slack import functions as slack
-from util.slack.functions import SlackEvent
 
 
 @slack.app.event("app_mention")
@@ -30,6 +27,7 @@ def action_body_to_event(body):
             "ts": body["message"]["ts"],
             "thread_ts": body["message"].get("thread_ts")}
 
+
 def handle_event(event, input):
     """
     handle event and deliver to langchain graph
@@ -37,7 +35,7 @@ def handle_event(event, input):
     :param input: input to langchain graph if the flow is interrupted and resume again, set None
     :return:
     """
-    logging.info(event)
+    print(event)
     slack_event = SlackEvent(event)
 
     try:
@@ -55,5 +53,4 @@ def handle_event(event, input):
 
 
 if __name__ == '__main__':
-
     slack.start()

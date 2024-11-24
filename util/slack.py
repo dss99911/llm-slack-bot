@@ -1,3 +1,8 @@
+from typing import Tuple, List
+
+from dotenv import load_dotenv
+
+load_dotenv()
 import base64
 import os
 import threading
@@ -10,8 +15,10 @@ from attr import dataclass
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
-from config import conversation_count_limit
 from util.common import memoize
+import re
+
+conversation_count_limit = 30
 
 slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
 slack_app_token = os.environ["SLACK_APP_TOKEN"]
@@ -48,7 +55,7 @@ class SlackEvent:
 
     @property
     def user(self):
-        return self.event["user"]
+        return self.event.get("user")
 
     @property
     def user_name(self):
@@ -61,6 +68,16 @@ class SlackEvent:
     @property
     def files(self):
         return self.event.get("files")
+
+    @property
+    def elements(self) -> list:
+        return self.event.get("elements")
+
+    def get_links(self):
+        return [e.get("url") for e in self.elements or [] if e.get("type") == "link" and e.get("url")]
+
+    def get_slack_link_channel_thread_ts(self)-> List[Tuple[str, str]]:
+        return list(filter(lambda l: l is not None, map(extract_slack_link, self.get_links())))
 
     def is_direct_message(self):
         return self.channel_type == "im"
@@ -204,6 +221,29 @@ def upload_file(channel_id, thread_ts, message, file_path, content=None):
     if not response.get("ok"):
         raise Exception(f"Failed to upload image: {response}")
     return response
+
+
+def get_thread_conversation(channel, thread_ts, limit=conversation_count_limit):
+    return client.conversations_replies(channel=channel, ts=thread_ts, limit=limit)["messages"]
+
+
+def extract_slack_link(url):
+    prefix = "https://balancehero.slack.com/archives/"
+    if not url.startswith(prefix):
+        return None
+
+    pattern = rf"{prefix}([^/]+)/p(\d+)(?:\?thread_ts=(\d+\.\d+))?"
+    match = re.match(pattern, url)
+    if match:
+        channel = match.group(1)
+        ts = match.group(2)
+        thread_ts = match.group(3) or ts
+        if "." not in thread_ts:
+            thread_ts = thread_ts[:-6] + '.' + thread_ts[-6:]
+
+        return channel, thread_ts
+    else:
+        return None
 
 
 def start():

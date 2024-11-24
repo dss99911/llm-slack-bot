@@ -1,11 +1,10 @@
-from typing import Literal
+from imports import *
 
 from langchain_core.messages import AIMessage, ToolMessage, RemoveMessage
 
 from llm import *
 from prompt import *
 from tools import *
-from util.slack import SlackEvent
 
 from langgraph.graph import StateGraph, START
 from langgraph.prebuilt import ToolNode
@@ -25,8 +24,6 @@ def generate_prompt(state: State):
 
     if len(state["messages"]) == 0:
         messages = add_messages(messages, system_prompt(event))
-        if event.is_direct_message():
-            messages = add_messages(messages, get_personalized_prompt(event.user))
 
     messages = add_messages(messages, conversation_prompt(event))
     messages = add_messages(messages, question_prompt(event))
@@ -151,10 +148,18 @@ def stream_graph(event: Optional[dict], thread_id):
 
 def filtered_stream(stream):
     for item in stream:
+        #todo 여기서 tool execution 하는 것들도 나오지 않나? approval message나, execution 메시지 여기서 한번 가공하고, chatbot.py에 출력하는게 더 깔끔할 듯.
         if item[1]['langgraph_node'] not in ['llm_mini', 'llm_fallback']:
             continue
         if content := item[0].content:
-            yield content
+            # todo pydantic이나 typed dict같은거 써보기
+            if isinstance(content, list): # sonnet
+                for c in content:
+                    if isinstance(c, dict):
+                        if text := c.get('text'):
+                            yield text
+            else:
+                yield content
 
 
 def visualize_graph(graph):
