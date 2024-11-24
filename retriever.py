@@ -81,9 +81,10 @@ def get_company_retriever():
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         documents.append(text_splitter.split_documents(data.load()))
     documents = list(chain.from_iterable(documents))
-
-    vectorstore = Chroma.from_documents(documents, OpenAIEmbeddings())
+    embeddings = OpenAIEmbeddings()
+    vectorstore = FAISS.from_documents(documents, embeddings)
     retriever = vectorstore.as_retriever()
+    #todo roadmap같은 경우, 동일 문서의 다른 파편도 중요한데, 일부만 가져오다보니, 답변에 특별한 정보가 없음
     return retriever
 
 
@@ -94,6 +95,6 @@ def get_metadata_retriever():
         documents.append(text_splitter.split_documents(data.load()))
     documents = list(chain.from_iterable(documents))
     embeddings = OpenAIEmbeddings()
-    vectorstore = FAISS.from_documents(documents=documents, embedding=embeddings)
+    vectorstore = FAISS.from_documents(documents, embeddings)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
     return retriever

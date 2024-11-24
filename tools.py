@@ -38,6 +38,7 @@ def read_and_save_temp_data_by_sql(sql) -> dict:
     you can see the column's dtype and 3 sample rows on return value.
     :return: {"column_dtypes": df.dtypes.tolist(), "file_path": 'some-path.parquet', "sample_rows": df.sample(3).to_numpy().tolist()}.
     """
+    # todo 저장 후, 일정 시간 지나면, 삭제 필요
     df: pd.DataFrame = wr.athena.read_sql_query(sql=sql, database="log", boto3_session=boto3.Session(region_name=aws_region_name))
     file_path = f"/tmp/{uuid.uuid4()}.parquet"
     df.to_parquet(file_path)
