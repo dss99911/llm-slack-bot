@@ -33,46 +33,14 @@ class Data:
 
 
 common_data_list = [
-    Data(name="복리후생 규정",
-         path="data/5. [밸런스히어로] 복리후생 규정_20230828.pdf",
-         source="https://drive.google.com/file/d/15oM9bNwFpIAc2P1g4sQ9JRbwaW-zrbrM/view",
-         format="pdf"),
-    Data(name="단체보험 보장메뉴얼",
-         path="data/2019 Claim Manual_Balancehero.pdf",
-         source="Flex -> 문서, 증명서",
-         format="pdf"),
-    Data(name="roadmap",
-         path="data/[Roadmap] 2024.pptx",
-         source="https://docs.google.com/presentation/d/1FUY7iAN4cefzbm_l8syp4B7YuaK5-JErrAGhwQvVDLo/edit",
-         format="pptx"),
     Data(name="용어집",
          path="data/glossary.txt",
-         source="https://docs.google.com/document/d/1L-ZjYWNHDp5U85OWz9PSiOVfPGcvNWs4sb-Luv0sZdg/edit?tab=t.0#heading=h.2ii8sya6i026",
+         source="https://some-data.com",
          format="txt"),
-    Data(name="CoreMission, Vision & Core Value",
-         path="data/core_value.txt",
-         source="https://mewing-satellite-e66.notion.site/Mission-Vision-Core-Value-378c1822ae974160935a992d3adcd00a",
-         format="txt"),
-    Data(name="복리후생 제도 안내",
-         path="data/복리후생.txt",
-         source="https://mewing-satellite-e66.notion.site/c7f451371ccf42d7891eec16797fc2a8",
-         format="txt")]
+]
 
 metadata_list = [
-    Data(name='fp', path='data/fp.jsonl', source='data/fp.jsonl', format='jsonl'),
-    Data(name='da_risk_mgmt', path='data/da_risk_mgmt.jsonl', source='data/da_risk_mgmt.jsonl', format='jsonl'),
-    Data(name='bi_temp', path='data/bi_temp.jsonl', source='data/bi_temp.jsonl', format='jsonl'),
-    Data(name='log', path='data/log.jsonl', source='data/log.jsonl', format='jsonl'),
-    Data(name='da_common', path='data/da_common.jsonl', source='data/da_common.jsonl', format='jsonl'),
-    Data(name='da_backend', path='data/da_backend.jsonl', source='data/da_backend.jsonl', format='jsonl'),
-    Data(name='facts', path='data/facts.jsonl', source='data/facts.jsonl', format='jsonl'),
-    Data(name='tx', path='data/tx.jsonl', source='data/tx.jsonl', format='jsonl'),
-    Data(name='lms', path='data/lms.jsonl', source='data/lms.jsonl', format='jsonl'),
-    Data(name='acs_airflow', path='data/acs_airflow.jsonl', source='data/acs_airflow.jsonl', format='jsonl'),
-    Data(name='acs_monitoring', path='data/acs_monitoring.jsonl', source='data/acs_monitoring.jsonl', format='jsonl'),
-    Data(name='stats', path='data/stats.jsonl', source='data/stats.jsonl', format='jsonl'),
-    Data(name='userlog', path='data/userlog.jsonl', source='data/userlog.jsonl', format='jsonl'),
-    Data(name='errorlog', path='data/errorlog.jsonl', source='data/errorlog.jsonl', format='jsonl')
+    Data(name='user', path='data/user.jsonl', source='data/user.jsonl', format='jsonl'),
 ]
 
 def get_company_retriever():
