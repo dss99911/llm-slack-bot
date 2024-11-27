@@ -23,6 +23,17 @@
 - create slack app and add proper permissions
 - set `.env` file by refering to .env_sample
 
+## Run
+```shell
+python chatbot.py
+```
+
+## Plan
+- local chatbot for device automation
+- personal AI assistant
+- company chatbot (not updated here)
+
+
 ## Reference
 - [Langchain-kr](https://github.com/teddylee777/langchain-kr)
 - [amazon-bedrock-aistylist-lab](https://github.com/aws-samples/amazon-bedrock-aistylist-lab)
