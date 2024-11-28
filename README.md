@@ -32,6 +32,7 @@ python chatbot.py
 - local chatbot for device automation
 - personal AI assistant
 - company chatbot (not updated here)
+- RAG for source code. let user can decide scope like cursor IDE 
 
 
 ## Reference
