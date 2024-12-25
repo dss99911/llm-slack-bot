@@ -17,7 +17,7 @@ import pandas as pd
 # noinspection PyUnresolvedReferences
 import threading
 # noinspection PyUnresolvedReferences
-from utils.common import memoize
+from utils.common import *
 # noinspection PyUnresolvedReferences
 import base64
 # noinspection PyUnresolvedReferences
