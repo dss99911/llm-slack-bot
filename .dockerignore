@@ -1,0 +1,9 @@
+.env
+.idea/
+.env_sample
+.gitignore
+.git
+README.md
+*.iml
+__pycache__
+deploy

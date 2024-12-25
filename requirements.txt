@@ -1,31 +1,8 @@
-#slack
 slack_bolt
-
-# langchain
 langchain
 langchain_community
 langchain_experimental
-langgraph
-
-# llm
 langchain-openai
-langchain-aws
-
-python-dotenv
-
-# langchain plugins
-langchain-google-community[drive]
-
-# retriever related
-pypdf
-unstructured
-python-pptx
+langgraph
 faiss-cpu
-jq
-sqlalchemy
-PyAthena
-
-
-# tools
-awswrangler
-
+pandas
