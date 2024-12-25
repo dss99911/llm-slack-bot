@@ -35,6 +35,8 @@ python chatbot.py
 
 ## Deploy to server
 configure `deploy/config.sh` and run the below
+this requires docker and docker-compose on the server.
+tested on ec2 server
 
 ```shell
 cd deploy
