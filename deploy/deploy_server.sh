@@ -2,8 +2,9 @@ set -ex
 
 source config.sh
 
-pem_path="set-your-pem-path"
-ip_address="set-your-ip-address"
-env_path="set-env-path-on-server"
-ssh -i "$pem_path" ec2-user@"$ip_address" "sudo docker rm -f $image_name" || true
-ssh -i "$pem_path" ec2-user@"$ip_address" "sudo docker run -d --restart unless-stopped -v $env_path:/opt/code/.env --name $image_name $image_uri"
+cd ..
+
+ssh -i "$pem_path" ec2-user@"$ip_address" "mkdir -p $server_project_dir"
+scp -i "$pem_path" .env docker-compose.yml deploy/restart_docker_compose.sh ec2-user@"$ip_address":"$server_project_dir/"
+
+ssh -i "$pem_path" ec2-user@"$ip_address" "cd $server_project_dir && sudo sh ./restart_docker_compose.sh"

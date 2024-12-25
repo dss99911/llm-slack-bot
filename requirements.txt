@@ -6,3 +6,5 @@ langchain-openai
 langgraph
 faiss-cpu
 pandas
+youtube-transcript-api
+requests[socks]

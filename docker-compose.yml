@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  tor:
+    image: dperson/torproxy
+    container_name: torproxy
+    ports:
+      - "9050:9050"
+    restart: unless-stopped
+  llm-slack-bot:
+    image: hyun123/llm-slack-bot
+    container_name: llm-slack-bot
+    volumes:
+      - ".env:/opt/code/.env"
+    depends_on:
+      - tor
+    restart: unless-stopped

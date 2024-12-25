@@ -1,3 +1,6 @@
+from typing import Union
+from youtube_transcript_api import YouTubeTranscriptApi
+
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_experimental.tools import PythonREPLTool
 
@@ -28,17 +31,35 @@ def use_better_llm(state: Annotated[dict, InjectedState]):
     return "Activated better LLM"
 
 
+@tool
+def fetch_youtube_script(video_id: str) -> List[Dict[str, Union[str, float]]]:
+    """ fetch youtube script by video id
+
+    :param video_id: https://www.youtube.com/watch?v={video_id}
+    :return: [{'text': str, 'start': float, 'duration': float}]
+    """
+    transcripts = YouTubeTranscriptApi.list_transcripts('SraM54xL45o', proxies={
+        "https": "socks5://torproxy:9050",
+        "http": "socks5://torproxy:9050",
+    })
+
+    return [transcript.fetch() for transcript in transcripts][0]
+
+
 def get_tools(permission):
     tools = []
     if permission >= PERMISSION_USE:
-        tools.extend(filter(lambda a: a is not None, [search_tool,
-                      retrieve_data_tool,
-                      show_image_tool,
-                      get_slack_thread_conversation,
-                      get_slack_channel_conversation,
-                      use_better_llm,
-                      python_tool,
-                      send_slack_dm]))
+        tools.extend(filter(None, [
+            search_tool,
+            retrieve_data_tool,
+            show_image_tool,
+            get_slack_thread_conversation,
+            get_slack_channel_conversation,
+            use_better_llm,
+            python_tool,
+            send_slack_dm,
+            fetch_youtube_script
+        ]))
 
     return tools
 
