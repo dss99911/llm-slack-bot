@@ -33,6 +33,14 @@
 python chatbot.py
 ```
 
+## Deploy to server
+configure `deploy/config.sh` and run the below
+
+```shell
+cd deploy
+sh deploy_server.sh
+```
+
 ## Plan
 - local chatbot for device automation
 - personal AI assistant
