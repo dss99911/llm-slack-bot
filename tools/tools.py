@@ -38,7 +38,7 @@ def fetch_youtube_script(video_id: str) -> List[Dict[str, Union[str, float]]]:
     :param video_id: https://www.youtube.com/watch?v={video_id}
     :return: [{'text': str, 'start': float, 'duration': float}]
     """
-    transcripts = YouTubeTranscriptApi.list_transcripts('SraM54xL45o', proxies={
+    transcripts = YouTubeTranscriptApi.list_transcripts(video_id, proxies={
         "https": "socks5://torproxy:9050",
         "http": "socks5://torproxy:9050",
     })
