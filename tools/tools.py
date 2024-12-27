@@ -32,11 +32,11 @@ def use_better_llm(state: Annotated[dict, InjectedState]):
 
 
 @tool
-def fetch_youtube_script(video_id: str) -> List[Dict[str, Union[str, float]]]:
+def fetch_youtube_script(video_id: str) -> List[Tuple[float, str]]:
     """ fetch youtube script by video id
 
     :param video_id: https://www.youtube.com/watch?v={video_id}
-    :return: [{'text': str, 'start': float, 'duration': float}]
+    :return: list of transcript start time seconds and text. ex) [(15, "abc"), (20, "def")]
     """
     def fetch():
         transcripts = YouTubeTranscriptApi.list_transcripts(video_id, proxies={
@@ -44,7 +44,9 @@ def fetch_youtube_script(video_id: str) -> List[Dict[str, Union[str, float]]]:
             "http": "socks5://torproxy:9050",
         })
 
-        return [transcript.fetch() for transcript in transcripts][0]
+        transcripts = [transcript.fetch() for transcript in transcripts][0]
+        transcripts = [(f'{item["start"]}s', item["text"]) for item in transcripts]
+        return transcripts
 
     return retry_action(fetch, 3)
 

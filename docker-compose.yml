@@ -5,6 +5,8 @@ services:
     container_name: torproxy
     ports:
       - "9050:9050"
+    volumes:
+      - ./torrc:/etc/tor/torrc:ro
     restart: unless-stopped
   llm-slack-bot:
     image: hyun123/llm-slack-bot
