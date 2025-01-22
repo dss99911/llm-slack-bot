@@ -1,4 +1,3 @@
-import base64
 import os
 import threading
 import time
@@ -6,11 +5,16 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import partial
 from typing import List, Tuple
-import requests
 import re
 from slack_sdk import WebClient
 from typing import TypedDict
 from utils.common import memoize
+
+from dotenv import load_dotenv
+
+from utils.image import download_and_encode_image
+
+load_dotenv()
 
 conversation_count_limit = 50
 
@@ -78,7 +82,7 @@ class SlackEvent:
 
     @property
     def user_name(self):
-        return get_user_name(self.user)
+        return get_user_name(self.user) if self.user else self.event.get("username")
 
     @property
     def text(self):
@@ -124,6 +128,9 @@ class SlackEvent:
 
     def is_in_thread(self):
         return self.event.get("thread_ts") is not None
+
+    def is_the_bot(self):
+        return self.user_name == get_bot_name()
 
     def reply_message(self, message):
         executor.submit(partial(send_message, message, channel=self.channel, thread_ts=self.thread_ts))
@@ -176,8 +183,9 @@ class SlackEvent:
     def get_encoded_images(self):
         image_urls = self._extract_image_urls()
         base64_images = []
+        headers = {"Authorization": f"Bearer {slack_bot_token}"}
         for url in image_urls:
-            base64_data = download_and_encode_image(url)
+            base64_data = download_and_encode_image(url, headers)
             if base64_data:
                 base64_images.append(base64_data)
         return base64_images
@@ -249,18 +257,6 @@ def get_user_name(user_id):
     response = client.users_info(user=user_id)
     real_name = response["user"]["name"]
     return real_name
-
-
-def download_and_encode_image(url):
-    headers = {"Authorization": f"Bearer {slack_bot_token}"}
-    response = requests.get(url, headers=headers)
-    if url.lower().endswith((".jpg", ".jpeg")):
-        mime_type = "image/jpeg"
-    elif url.lower().endswith(".png"):
-        mime_type = "image/png"
-    else:
-        mime_type = "image/unknown"
-    return f"data:{mime_type};base64,{base64.b64encode(response.content).decode('utf-8')}"
 
 
 def upload_file(channel_id, thread_ts, message, file_path, content=None):
@@ -377,3 +373,4 @@ def get_user(user_name):
 
 def get_user_id(user_name):
     return get_user(user_name).get("id")
+

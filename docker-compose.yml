@@ -11,8 +11,13 @@ services:
   llm-slack-bot:
     image: hyun123/llm-slack-bot
     container_name: llm-slack-bot
+    ports:
+      - "5001:5001"
     volumes:
       - ".env:/opt/code/.env"
+      - tor_data:/etc/tor/run
     depends_on:
       - tor
     restart: unless-stopped
+volumes:
+  tor_data:

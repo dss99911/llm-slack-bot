@@ -1,9 +1,7 @@
-MaxCircuitDirtiness 0
-NewCircuitPeriod 0
+ControlPort 0.0.0.0:9051 # 0.0.0.0 let llm-slack-bot to access to tor container port
 
 # default configuration
 AutomapHostsOnResolve 1
-ControlPort 9051
 ControlSocket /etc/tor/run/control
 ControlSocketsGroupWritable 1
 CookieAuthentication 1

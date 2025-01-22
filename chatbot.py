@@ -111,5 +111,5 @@ def handle_event(event):
         logging.exception(e)
 
 
-if __name__ == '__main__':
+def run():
     SocketModeHandler(app, slack_app_token).start()

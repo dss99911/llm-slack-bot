@@ -43,7 +43,8 @@ def call_llm_fallback(state: State):
 def call_llm(state: State, better):
     slack_event = SlackEvent(state["event"])
     permission = get_user_permission(slack_event.user)
-    return {"messages": [get_llm(better, permission, slack_event.shortcut).invoke(state["messages"])]}
+    llm = get_llm(better, permission, slack_event.shortcut)
+    return {"messages": [llm.invoke(state["messages"])]}
 
 
 def route_tools(state: State) -> Literal["tools", "tools_approval", "__end__"]:

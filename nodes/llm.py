@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-
+from utils.imports import *
 
 def get_model_openai(model_name):
     return ChatOpenAI(temperature=0.1,  # 창의성 (0.0 ~ 2.0)

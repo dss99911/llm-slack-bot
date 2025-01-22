@@ -1,12 +1,15 @@
-from typing import Union
-from youtube_transcript_api import YouTubeTranscriptApi
+import logging
 
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_experimental.tools import PythonREPLTool
+from pytube import YouTube
 
+from nodes.llm import llm_mini
 from tools.retriever_tool import *
 from tools.slack_tool import *
 from users.permission import *
+from utils.image import download_and_encode_image
+from utils.tor import TOR_PROXY_URL, move_to_next_exit_node
 
 python_tool = PythonREPLTool()
 python_tool.description = (
@@ -32,23 +35,53 @@ def use_better_llm(state: Annotated[dict, InjectedState]):
 
 
 @tool
-def fetch_youtube_script(video_id: str) -> List[Tuple[float, str]]:
-    """ fetch youtube script by video id
+def fetch_youtube_info(video_id: str) -> dict:
+    """ fetch youtube info, transcript by video id
 
     :param video_id: https://www.youtube.com/watch?v={video_id}
-    :return: list of transcript start time seconds and text. ex) [(15, "abc"), (20, "def")]
+    :return: title, description, publish_date, thumbnail_url, transcripts (list of transcript start time seconds and text. ex) [('15s', "abc"), ('20s', "def")])
     """
-    def fetch():
-        transcripts = YouTubeTranscriptApi.list_transcripts(video_id, proxies={
-            "https": "socks5://torproxy:9050",
-            "http": "socks5://torproxy:9050",
-        })
 
-        transcripts = [transcript.fetch() for transcript in transcripts][0]
-        transcripts = [(f'{item["start"]}s', item["text"]) for item in transcripts]
-        return transcripts
+    for i in range(5):
+        try:
+            move_to_next_exit_node()
+            yt = YouTube(f"https://www.youtube.com/watch?v={video_id}", proxies={
+                "https": TOR_PROXY_URL,
+                "http": TOR_PROXY_URL,
+            })
 
-    return retry_action(fetch, 3)
+            transcripts = [(f'{int(item["start"])}s', item["text"]) for item in yt.caption_tracks[0].captions]
+            return {
+                "title": yt.title,
+                "description": yt.description,
+                "publish_date": yt.publish_date.strftime("%Y-%m-%d"),
+                "thumbnail_url": yt.thumbnail_url,
+                "transcripts": transcripts
+            }
+        except Exception:
+            logging.exception("fetch_youtube_info exception")
+            try:
+                move_to_next_exit_node()
+            except:
+                logging.exception("move_to_next_exit_node")
+
+    raise Exception("Failed to fetch youtube info")
+
+
+@tool
+def ask_image_url(question: str, image_url: str, quality=25) -> str:
+    """
+     Processes a question related to an image on the url and returns the response using a language model.
+
+    :param question: question for the image
+    :param image_url: image url
+    :param quality: compression quality. if no mention, use default value
+    :return: answer text from language model
+    """
+
+    image_data = download_and_encode_image(image_url, compress_quality=quality)
+    res = llm_mini.invoke([HumanMessage(make_image_content(question, image_data))])
+    return res.content
 
 
 def get_tools(permission):
@@ -57,13 +90,12 @@ def get_tools(permission):
         tools.extend(filter(None, [
             search_tool,
             retrieve_data_tool,
-            show_image_tool,
             get_slack_thread_conversation,
             get_slack_channel_conversation,
             use_better_llm,
             python_tool,
             send_slack_dm,
-            fetch_youtube_script
+            fetch_youtube_info
         ]))
 
     return tools

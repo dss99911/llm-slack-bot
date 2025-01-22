@@ -6,5 +6,9 @@ langchain-openai
 langgraph
 faiss-cpu
 pandas
-youtube-transcript-api
 requests[socks]
+Pillow
+flask
+stem
+#psycopg2
+#sqlalchemy

@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 # noinspection PyUnresolvedReferences
 import logging
+import os
 # noinspection PyUnresolvedReferences
 from typing import Literal, Dict, Optional, Annotated, Tuple, List
 # noinspection PyUnresolvedReferences
@@ -38,3 +39,11 @@ from utils.slack import SlackEvent
 from datetime import datetime
 # noinspection PyUnresolvedReferences
 import pytz
+
+
+env = os.environ.get("ENV")
+prod = env == "prod"
+logging.basicConfig(
+    level="INFO" if prod else "DEBUG",
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
+)

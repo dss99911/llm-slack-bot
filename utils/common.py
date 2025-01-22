@@ -1,21 +1,47 @@
 import os
 import shutil
+import threading
 import time
+import traceback
 from functools import wraps
 from os.path import isdir
 
+import time
+from functools import wraps
 
 
-def memoize(f):
-    memo = {}
+def memoize(expiry_seconds=None):
+    if callable(expiry_seconds):
+        return memoize()(expiry_seconds)
 
-    @wraps(f)
-    def wrapper(*args):
-        if args not in memo:
-            memo[args] = f(*args)
-        return memo[args]
+    expiry_seconds = expiry_seconds or float('inf')
 
-    return wrapper
+    def decorator(f):
+        memo = {}
+        timestamps = {}
+
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            current_time = time.time()
+            # args와 kwargs를 조합하여 키 생성
+            key = (args, frozenset(kwargs.items()))
+
+            # 캐시 만료 확인 및 제거
+            if key in memo:
+                if current_time - timestamps[key] > expiry_seconds:
+                    del memo[key]
+                    del timestamps[key]
+
+            # 새 값 계산 및 저장
+            if key not in memo:
+                memo[key] = f(*args, **kwargs)
+                timestamps[key] = current_time
+
+            return memo[key]
+
+        return wrapper
+
+    return decorator
 
 
 def remove_path(file_path):
@@ -37,9 +63,19 @@ def retry_action(action, count=10):
     try:
         return action()
     except Exception as e:
+        traceback.print_exc()
         print(f"Error occurred: {e}. Retrying... ({count} attempts left)")
         if count <= 1:
             raise ValueError(f"Retry attempts exceeded: {e}") from e
 
         time.sleep(1)
         return retry_action(action, count - 1)
+
+
+def run_periodically(interval, func):
+    def worker():
+        while True:
+            func()
+            time.sleep(interval)
+    thread = threading.Thread(target=worker, daemon=True)
+    thread.start()
