@@ -21,7 +21,7 @@ def ask():
     user_id = "UA2TKHJPN"
     res = slack.send_message(question, user_id)
 
-    thread = threading.Thread(target=answer, args=(question, user_id, res['ts']))
+    thread = threading.Thread(target=answer, args=(question, user_id, res['channel'], res['ts']))
     thread.start()
 
     return jsonify({"status": "success"}), 200
@@ -52,9 +52,9 @@ def run():
     app.run(debug=not prod, host='0.0.0.0', port=5001)
 
 
-def answer(question, user_id, ts):
+def answer(question, user_id, channel, ts):
     handle_event({
-        'channel': user_id, 'ts': ts,
+        'channel': channel, 'ts': ts,
         'user': user_id,
         'text': question
     })

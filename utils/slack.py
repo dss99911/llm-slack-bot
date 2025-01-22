@@ -373,4 +373,3 @@ def get_user(user_name):
 
 def get_user_id(user_name):
     return get_user(user_name).get("id")
-
