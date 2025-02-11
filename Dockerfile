@@ -10,7 +10,6 @@ RUN apt-get update && apt-get upgrade -y \
 COPY requirements.txt .
 RUN pip3 install -U pip
 RUN pip3 install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir git+https://github.com/dss99911/pytube@dd0183e60485bb79cf558dc3090e13390c3c1f74
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN ln -s /usr/bin/pip3 /usr/bin/pip

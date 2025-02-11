@@ -1,7 +1,7 @@
 import threading
 
-import chatbot
-import api
+from module import chatbot, api, youtube_feed
+
 
 def main():
     chatbot_thread = threading.Thread(target=chatbot.run, daemon=True)
@@ -9,6 +9,7 @@ def main():
 
     chatbot_thread.start()
     api_thread.start()
+    youtube_feed.run()
 
     chatbot_thread.join()
     api_thread.join()

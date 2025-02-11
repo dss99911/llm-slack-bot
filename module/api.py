@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-from chatbot import handle_event
+from module.chatbot import handle_event
 from utils.imports import *
 
 API_TOKEN = os.environ.get("API_TOKEN")
@@ -21,7 +21,7 @@ def ask():
     user_id = "UA2TKHJPN"
     res = slack.send_message(f"<@{user_id}> {question}", user_id)
 
-    thread = threading.Thread(target=answer, args=(question, user_id, res['channel'], res['ts']))
+    thread = threading.Thread(target=answer, args=(question, user_id, res['channel'], res['ts']), daemon=True)
     thread.start()
 
     return jsonify({"status": "success"}), 200
