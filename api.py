@@ -19,7 +19,7 @@ def ask():
 
     question = get_question()
     user_id = "UA2TKHJPN"
-    res = slack.send_message(question, user_id)
+    res = slack.send_message(f"<@{user_id}> {question}", user_id)
 
     thread = threading.Thread(target=answer, args=(question, user_id, res['channel'], res['ts']))
     thread.start()

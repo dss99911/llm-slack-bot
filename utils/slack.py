@@ -195,24 +195,49 @@ class SlackEvent:
         reply_ts = None
         reply_channel = None
 
+        delay_time = 0.3
+        msg_too_long = False
+        completed = False
+
         while True:
+            if completed:
+                break
+
+            time.sleep(delay_time)
             completed = stop_event.is_set()
+
+            if msg_too_long:
+                # wait completion
+                continue
+
             message = markdown_to_slack("".join(reply_tokens))
             if message == message_replied:
-                # if no token added or not yet added new token after the message sent
-                time.sleep(0.3)
-            else:
-                if reply_ts is None:
-                    response = send_message(message, channel=self.channel, thread_ts=self.thread_ts)
-                    reply_ts = response["ts"]
-                    reply_channel = response["channel"]
-                else:
-                    update_message(message, reply_channel, reply_ts)
-                message_replied = message
+                continue
 
-            if completed:
-                # if completed, update finally and break the loop
-                break
+            if reply_ts is None:
+                response = send_message(message, channel=self.channel, thread_ts=self.thread_ts)
+                reply_ts = response["ts"]
+                reply_channel = response["channel"]
+            else:
+                try:
+                    update_message(message, reply_channel, reply_ts)
+                except SlackApiError as e:
+                    logging.warning(e.response['error'])
+
+                    if e.response['error'] == 'ratelimited':
+                        delay_time = 1
+                        completed = False
+                        continue
+                    elif e.response['error'] == 'msg_too_long':
+                        msg_too_long = True
+                    else:
+                        raise e
+
+            message_replied = message
+        if msg_too_long:
+            message = markdown_to_slack("".join(reply_tokens))
+            self.reply_file("Answer", content=message)
+            update_message("Answered by file below", reply_channel, reply_ts)
 
     def _extract_image_urls(self):
         image_urls = []

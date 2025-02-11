@@ -42,7 +42,7 @@ def fetch_youtube_info(video_id: str) -> dict:
     :return: title, description, publish_date, thumbnail_url, transcripts (list of transcript start time seconds and text. ex) [('15s', "abc"), ('20s', "def")])
     """
 
-    for i in range(5):
+    for i in range(10):
         try:
             move_to_next_exit_node()
             yt = YouTube(f"https://www.youtube.com/watch?v={video_id}", proxies={
@@ -53,9 +53,6 @@ def fetch_youtube_info(video_id: str) -> dict:
             transcripts = [(f'{int(item["start"])}s', item["text"]) for item in yt.caption_tracks[0].captions]
             return {
                 "title": yt.title,
-                "description": yt.description,
-                "publish_date": yt.publish_date.strftime("%Y-%m-%d"),
-                "thumbnail_url": yt.thumbnail_url,
                 "transcripts": transcripts
             }
         except Exception:
