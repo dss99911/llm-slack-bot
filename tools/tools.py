@@ -42,7 +42,7 @@ def fetch_youtube_info(video_id: str) -> dict:
     :return: title, description, publish_date, thumbnail_url, transcripts (list of transcript start time seconds and text. ex) [('15s', "abc"), ('20s', "def")])
     """
 
-    for i in range(10):
+    for i in range(30):
         try:
             move_to_next_exit_node()
             yt = YouTube(f"https://www.youtube.com/watch?v={video_id}", proxies={

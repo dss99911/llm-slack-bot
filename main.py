@@ -4,15 +4,14 @@ from module import chatbot, api, youtube_feed
 
 
 def main():
-    chatbot_thread = threading.Thread(target=chatbot.run, daemon=True)
-    api_thread = threading.Thread(target=api.run, daemon=True)
+    functions = [chatbot.run, api.run, youtube_feed.run]
+    threads = [threading.Thread(target=f, daemon=True) for f in functions]
 
-    chatbot_thread.start()
-    api_thread.start()
-    youtube_feed.run()
+    for thread in threads:
+        thread.start()
 
-    chatbot_thread.join()
-    api_thread.join()
+    for thread in threads:
+        thread.join()
 
 
 if __name__ == '__main__':
