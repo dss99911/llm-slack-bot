@@ -34,14 +34,14 @@ from requests.auth import HTTPBasicAuth
 # noinspection PyUnresolvedReferences
 from utils import slack
 # noinspection PyUnresolvedReferences
-from utils.slack import SlackEvent
+from utils.slack import SlackEvent, env
 # noinspection PyUnresolvedReferences
 from datetime import datetime
 # noinspection PyUnresolvedReferences
 import pytz
 from utils.cache import Cache
 
-env = os.environ.get("ENV")
+
 prod = env == "prod"
 logging.basicConfig(
     level="INFO" if prod else "DEBUG",

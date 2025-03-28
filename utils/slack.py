@@ -18,8 +18,9 @@ load_dotenv()
 
 conversation_count_limit = 50
 
-slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
-slack_app_token = os.environ["SLACK_APP_TOKEN"]
+env = os.environ.get("ENV", default="dev")
+slack_bot_token = os.environ[f"SLACK_BOT_TOKEN_{env}"]
+slack_app_token = os.environ[f"SLACK_APP_TOKEN_{env}"]
 
 client = WebClient(token=slack_bot_token)
 executor = ThreadPoolExecutor(max_workers=20)
@@ -290,7 +291,7 @@ def upload_file(channel_id, thread_ts, message, file_path, content=None):
     :return:
     """
     response = client.files_upload_v2(
-        channels=channel_id,
+        channel=channel_id,
         thread_ts=thread_ts,
         file=file_path,
         content=content,

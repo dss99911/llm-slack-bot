@@ -11,8 +11,9 @@ RUN pip3 install -U pip
 RUN pip3 install --no-cache-dir slack_bolt \
     langchain langchain_community langchain_experimental langchain-openai langgraph faiss-cpu \
     pandas requests[socks] Pillow flask stem \
-    git+https://github.com/dss99911/pytube@dd0183e60485bb79cf558dc3090e13390c3c1f74 \
     psycopg2-binary sqlalchemy feedparser schedule
+
+RUN pip3 install --no-cache-dir git+https://github.com/dss99911/pytube@79d0430fb96227962252ac02d11f3c8ce242ad28
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN ln -s /usr/bin/pip3 /usr/bin/pip
