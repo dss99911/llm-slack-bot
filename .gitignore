@@ -1,4 +1,6 @@
 .idea
 .env
 *.iml
-./db_data
+db_data
+.DS_Store
+*.pyc

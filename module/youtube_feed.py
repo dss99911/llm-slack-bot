@@ -20,7 +20,6 @@ feeds = [
     hyun_feed("https://www.youtube.com/feeds/videos.xml?playlist_id=PLH3j6V0I2cbnKkqBX2mjhjXpY_mWMZH-S"),
     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCeN2YeJcBCRJoXgzF_OU3qw"),
     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCXq7NNALDnqafn3KFvIyJKA"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCxvdCnvGODDyuvnELnLkQWw"),
     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCC3yfxS5qC6PCwDzetUuEWg"),
     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCOB62fKRT7b73X7tRxMuN2g"),
     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UC1Do3xw9OuUk7FQuPTmSVOw"),
