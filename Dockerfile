@@ -13,7 +13,7 @@ RUN pip3 install --no-cache-dir slack_bolt \
     pandas requests[socks] Pillow flask stem \
     psycopg2-binary sqlalchemy feedparser schedule
 
-RUN pip3 install --no-cache-dir git+https://github.com/dss99911/pytube@79d0430fb96227962252ac02d11f3c8ce242ad28
+RUN pip3 install --no-cache-dir youtube_transcript_api
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN ln -s /usr/bin/pip3 /usr/bin/pip

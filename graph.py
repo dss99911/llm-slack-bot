@@ -71,7 +71,7 @@ def is_tool_approval_required(message):
 def send_tool_message(message, event):
     for tool_call in message.tool_calls:
         tool_message = f"Executing {tool_call['name']}"
-        event.reply_file(tool_message, content=get_tool_func_text(tool_call))
+        logging.info(tool_message)
 
 
 def send_tool_approval_message(message, event):

@@ -13,7 +13,7 @@ class Feed:
     channel_id: str
     user_id: str
 
-hyun_feed = partial(Feed, channel_id="UA2TKHJPN", user_id="UA2TKHJPN")
+hyun_feed = partial(Feed, channel_id="D086TAF545P", user_id="UA2TKHJPN")
 
 
 feeds = [
@@ -42,8 +42,8 @@ def job():
     urls = fetch_new_youtube_urls()
     logging.info(f"youtube new urls: {len(urls)}")
     for url in urls:
-        res = slack.send_message(f"<@{url['user_id']}> {url['url']}", url['channel_id'])
-        answer(url['url'], url['user_id'], res['channel'], res['ts'])
+        slack.send_message(f"<@{url['user_id']}> {url['url']}", url['channel_id'])
+        answer(f"{url['url']}", url['user_id'], url['channel_id'], None)
         youtube_urls.complete(url['url'], url['channel_id'], url['user_id'])
 
 def fetch_new_youtube_urls():
