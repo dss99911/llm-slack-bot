@@ -30,8 +30,6 @@ feeds = [
 url_cache = Cache()
 
 def run():
-    if not prod:
-        return
     job()
     schedule.every(10).minutes.do(job)
 

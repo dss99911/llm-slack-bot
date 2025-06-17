@@ -1,15 +1,14 @@
 import logging
 
+from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_experimental.tools import PythonREPLTool
-from pytube import YouTube
 
 from nodes.llm import llm_mini
 from tools.retriever_tool import *
 from tools.slack_tool import *
 from users.permission import *
 from utils.image import download_and_encode_image
-from utils.tor import TOR_PROXY_URL, move_to_next_exit_node
 
 python_tool = PythonREPLTool()
 python_tool.description = (
@@ -35,34 +34,16 @@ def use_better_llm(state: Annotated[dict, InjectedState]):
 
 
 @tool
-def fetch_youtube_info(video_id: str) -> dict:
-    """ fetch youtube info, transcript by video id
-
+def fetch_youtube_transcript(video_id: str) -> str:
+    """ fetch youtube transcript by video id
     :param video_id: https://www.youtube.com/watch?v={video_id}
-    :return: title, description, publish_date, thumbnail_url, transcripts (list of transcript start time seconds and text. ex) [('15s', "abc"), ('20s', "def")])
     """
 
-    for i in range(30):
-        try:
-            move_to_next_exit_node()
-            yt = YouTube(f"https://www.youtube.com/watch?v={video_id}", proxies={
-                "https": TOR_PROXY_URL,
-                "http": TOR_PROXY_URL,
-            })
+    transcripts = YouTubeTranscriptApi().list(video_id)
 
-            transcripts = [(f'{int(item["start"])}s', item["text"]) for item in yt.caption_tracks[0].captions]
-            return {
-                "title": yt.title,
-                "transcripts": transcripts
-            }
-        except Exception:
-            logging.exception("fetch_youtube_info exception")
-            try:
-                move_to_next_exit_node()
-            except:
-                logging.exception("move_to_next_exit_node")
-
-    raise Exception("Failed to fetch youtube info")
+    res = [transcript.fetch() for transcript in transcripts][0]
+    res = "\n".join([s.text for s in res.snippets])
+    return res
 
 
 @tool
@@ -92,7 +73,7 @@ def get_tools(permission):
             use_better_llm,
             python_tool,
             send_slack_dm,
-            fetch_youtube_info
+            fetch_youtube_transcript
         ]))
 
     return tools

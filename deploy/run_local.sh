@@ -1,3 +1,4 @@
 set -ex
-sh deploy_docker.sh
-sh restart_docker_compose.sh
+cd $(dirname "$0")/..
+sh deploy/deploy_docker.sh
+sh deploy/restart_docker_compose.sh "docker-compose-local.yml"

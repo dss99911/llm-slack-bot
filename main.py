@@ -1,10 +1,14 @@
 import threading
 
 from module import chatbot, api, youtube_feed
+from utils.slack import env
 
 
 def main():
-    functions = [chatbot.run, api.run, youtube_feed.run]
+    if env == "dev":
+        functions = [chatbot.run, api.run, youtube_feed.run]
+    else:
+        functions = [chatbot.run]
     threads = [threading.Thread(target=f, daemon=True) for f in functions]
 
     for thread in threads:

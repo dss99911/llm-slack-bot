@@ -4,12 +4,11 @@ services:
     image: hyun123/llm-slack-bot
     container_name: llm-slack-bot
     environment:
-        ENV: 'prod'
+        ENV: 'dev'
     ports:
       - "5001:5001"
     volumes:
       - ".env:/opt/code/.env"
-      - tor_data:/etc/tor/run
     depends_on:
       - db
     restart: unless-stopped
