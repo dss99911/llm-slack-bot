@@ -7,11 +7,15 @@ RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
 RUN apt-get update && apt-get upgrade -y \
     && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
+# Install SQLite system libraries
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev && rm -rf /var/lib/apt/lists/*
+
 RUN pip3 install -U pip
 RUN pip3 install --no-cache-dir slack_bolt \
     langchain langchain_community langchain_experimental langchain-openai langgraph faiss-cpu \
     pandas requests[socks] Pillow flask stem \
-    psycopg2-binary sqlalchemy feedparser schedule
+    sqlalchemy feedparser schedule
+# psycopg2-binary removed as we are switching to SQLite
 
 RUN pip3 install --no-cache-dir youtube_transcript_api
 
