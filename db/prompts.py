@@ -21,18 +21,18 @@ SELECT_ALL = f"SELECT * FROM {TABLE_NAME};"
 # 데이터 삽입 (중복 시 덮어쓰기)
 INSERT_OR_UPDATE = f"""
 INSERT INTO {TABLE_NAME} (slack_id, slack_name, channel_id, channel_name, prompt, updated_date)
-VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 ON CONFLICT (slack_id, channel_id) 
 DO UPDATE SET 
-    slack_name = EXCLUDED.slack_name,
-    channel_name = EXCLUDED.channel_name,
-    prompt = EXCLUDED.prompt,
+    slack_name = excluded.slack_name,
+    channel_name = excluded.channel_name,
+    prompt = excluded.prompt,
     updated_date = CURRENT_TIMESTAMP;
 """
 
 # 특정 slack_id와 channel_id로 데이터 조회
 SELECT_BY_SLACK_CHANNEL = f"""
-SELECT * FROM {TABLE_NAME} WHERE slack_id = %s AND channel_id = %s;
+SELECT * FROM {TABLE_NAME} WHERE slack_id = ? AND channel_id = ?;
 """
 
 

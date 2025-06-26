@@ -21,9 +21,10 @@
 
 ## Requirements
 - python3.11
-- install requirements.txt
-- create slack app and add proper permissions
-- set `.env` file by referring to .env_sample
+- **Database**: The application now uses SQLite. The Python `sqlite3` library is part of the standard library, so no separate driver installation via pip is typically needed for it. The system-level `sqlite3` tools are installed via the Dockerfile if running in Docker. The database will be automatically created as a file at `db/app.db`. No external database server setup is required.
+- Install other dependencies as specified (e.g., in the Dockerfile or a requirements.txt if provided for local setup outside Docker).
+- Create a Slack app and add proper permissions.
+- Set the `.env` file by referring to `.env_sample`. Note that PostgreSQL-specific environment variables (like `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) are no longer required as the application has been migrated to SQLite.
 
 ## Slack configuration
 [slack-config](slack-config.md)
