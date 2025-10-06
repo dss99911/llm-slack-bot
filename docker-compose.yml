@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   llm-slack-bot:
-    image: hyun123/llm-slack-bot
+    image: ghcr.io/dss99911/llm-slack-bot:latest
     container_name: llm-slack-bot
     environment:
         ENV: 'prod'
@@ -9,7 +9,6 @@ services:
       - "5001:5001"
     volumes:
       - ".env:/opt/code/.env"
-      - tor_data:/etc/tor/run
     depends_on:
       - db
     restart: unless-stopped

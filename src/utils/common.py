@@ -79,3 +79,15 @@ def run_periodically(interval, func):
             time.sleep(interval)
     thread = threading.Thread(target=worker, daemon=True)
     thread.start()
+    
+
+def make_list(value):
+    if value is None:
+        return []
+
+    if type(value) is set:
+        return list(value)
+
+    if type(value) is not list:
+        value = [value]
+    return value

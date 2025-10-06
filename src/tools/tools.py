@@ -1,5 +1,5 @@
-import logging
 
+from requests import Session
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_experimental.tools import PythonREPLTool
@@ -20,6 +20,8 @@ python_tool.description = (
 )
 search_tool = TavilySearchResults(name="Search", max_results=2)
 
+proxy_url = os.environ[f"PROXY_URL"]
+
 
 @tool
 def use_better_llm(state: Annotated[dict, InjectedState]):
@@ -34,16 +36,30 @@ def use_better_llm(state: Annotated[dict, InjectedState]):
 
 
 @tool
-def fetch_youtube_transcript(video_id: str) -> str:
+def fetch_youtube_transcript(video_id):
     """ fetch youtube transcript by video id
-    :param video_id: https://www.youtube.com/watch?v={video_id}
+        :param video_id: https://www.youtube.com/watch?v={video_id}
     """
+    if env == "prod":
+        session = Session()
+        session.proxies.update({"http": proxy_url, "https": proxy_url})
+        session.verify = False
+    else:
+        session = None
 
-    transcripts = YouTubeTranscriptApi().list(video_id)
+    for i in range(5):
+        try:
+            api = YouTubeTranscriptApi(http_client=session)
+            transcripts = api.list(video_id)
 
-    res = [transcript.fetch() for transcript in transcripts][0]
-    res = "\n".join([s.text for s in res.snippets])
-    return res
+            res = [transcript.fetch() for transcript in transcripts][0]
+            res = "\n".join([s.text for s in res.snippets])
+            return res
+        except Exception as e:
+            print(e)
+    
+    raise Exception("error occurred")
+    
 
 
 @tool

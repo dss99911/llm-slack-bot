@@ -1,4 +1,4 @@
-from db.connection import get_db_cursor
+from db.database import get_db_cursor
 
 TABLE_NAME = "youtube_urls"
 
@@ -12,7 +12,7 @@ def create_table():
         cursor.execute(f"""
 CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
     id SERIAL PRIMARY KEY,
-    url TEXT UNIQUE NOT NULL,
+    url TEXT NOT NULL,
     channel_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
     status TEXT DEFAULT '{STATUS_INSERTED}',
@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
     CONSTRAINT unique_url UNIQUE (url, channel_id, user_id)
 );
 """)
+        
 
 def insert(url, channel_id, user_id, status=STATUS_INSERTED):
     with get_db_cursor(commit=True) as cursor:
@@ -40,4 +41,7 @@ def complete(url, channel_id, user_id):
         cursor.execute(f"UPDATE {TABLE_NAME} SET status = %s, updated_at = CURRENT_TIMESTAMP WHERE url = %s and channel_id = %s and user_id = %s;",
                        (STATUS_COMPLETED, url, channel_id, user_id))
 
+
 create_table()
+
+

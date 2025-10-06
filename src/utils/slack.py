@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 import time
@@ -9,6 +10,7 @@ import re
 from slack_sdk import WebClient
 from typing import TypedDict
 from utils.common import memoize
+from slack_sdk.errors import SlackApiError
 
 from dotenv import load_dotenv
 

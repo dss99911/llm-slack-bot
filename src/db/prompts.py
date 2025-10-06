@@ -1,4 +1,4 @@
-from db.connection import get_db_cursor
+from db.database import get_db_cursor
 
 TABLE_NAME = "prompts"
 

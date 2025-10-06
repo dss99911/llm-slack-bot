@@ -30,6 +30,7 @@ feeds = [
 url_cache = Cache()
 
 def run():
+    set_all_existing_url_completed()
     job()
     schedule.every(10).minutes.do(job)
 
@@ -42,8 +43,8 @@ def job():
     urls = fetch_new_youtube_urls()
     logging.info(f"youtube new urls: {len(urls)}")
     for url in urls:
-        slack.send_message(f"<@{url['user_id']}> {url['url']}", url['channel_id'])
-        answer(f"{url['url']}", url['user_id'], url['channel_id'], None)
+        res = slack.send_message(f"<@{url['user_id']}> {url['url']}", url['channel_id'])
+        answer(f"{url['url']}", url['user_id'], url['channel_id'], res['ts'])
         youtube_urls.complete(url['url'], url['channel_id'], url['user_id'])
 
 def fetch_new_youtube_urls():

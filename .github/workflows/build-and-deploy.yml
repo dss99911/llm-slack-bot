@@ -1,0 +1,51 @@
+name: Build & Deploy (GHCR + Self-Hosted)
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  packages: write   # GHCR push
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | \
+             docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build image
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository }}:latest \
+            -t ghcr.io/${{ github.repository }}:sha-${{ github.sha }} .
+
+      - name: Push image
+        run: |
+          docker push ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+
+  deploy:
+    needs: build-push
+    runs-on: [self-hosted, ec2]
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Login to GHCR (private 이미지인 경우)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | \
+             docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Pull & Up
+        working-directory: /opt/app
+        run: |
+          docker compose pull
+          docker compose up -d --remove-orphans

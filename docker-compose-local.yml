@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   llm-slack-bot:
-    image: hyun123/llm-slack-bot
+    image: ghcr.io/dss99911/llm-slack-bot:latest
     container_name: llm-slack-bot
     environment:
         ENV: 'dev'
@@ -22,5 +22,3 @@ services:
     volumes:
       - ./db_data:/var/lib/postgresql/data
     restart: unless-stopped
-volumes:
-  tor_data:

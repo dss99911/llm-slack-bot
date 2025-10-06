@@ -21,6 +21,7 @@ RUN ln -s /usr/bin/pip3 /usr/bin/pip
 ENV PYTHONUNBUFFERED=TRUE
 ENV PYTHONDONTWRITEBYTECODE=TRUE
 ENV PATH="/opt/code:${PATH}"
+ENV PYTHONPATH="/opt/code/src"
 COPY . /opt/code/
 WORKDIR /opt/code
-CMD ["python", "main.py"]
+CMD ["python", "-m", "main"]
