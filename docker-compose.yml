@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   llm-slack-bot:
     image: ghcr.io/dss99911/llm-slack-bot:latest
