@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.11-slim-bookworm As build
+FROM --platform=linux/arm64 python:3.11-slim-bookworm As build
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
     echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
