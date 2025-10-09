@@ -10,7 +10,7 @@ import sqlalchemy
 
 DATABASE_URL = (
     f"postgresql+psycopg2://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}"
-    f"@localhost:5432/{os.environ['POSTGRES_DB']}"
+    f"@db:5432/{os.environ['POSTGRES_DB']}"
 )
 
 engine = create_engine(DATABASE_URL)
