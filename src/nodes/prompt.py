@@ -1,5 +1,5 @@
+import db
 from tools.slack_tool import convert_conversation_to_messages, make_image_content, slack_content
-from users.user_prompt import get_user_system_prompt, get_channel_system_prompt
 from utils.imports import *
 
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -36,10 +36,10 @@ def system_prompt(event: SlackEvent):
     Ensure all responses follow these rules and maintain a professional yet approachable tone.
     """
 
-    if channel_system_prompt := get_channel_system_prompt(event.channel):
+    if channel_system_prompt := db.select_one(db.Prompt, db.Prompt.channel_id == event.channel):
         system_prompt += f"\n\n==Role Instruction\n{channel_system_prompt}"
 
-    if user_system_prompt:= get_user_system_prompt(event.user):
+    if user_system_prompt:= db.select_one(db.Prompt, db.Prompt.slack_id == event.user):
         # some model doesn't allow multiple SystemMessage
         system_prompt += f"\n\n==User Instruction==\n{user_system_prompt}"
 

@@ -7,8 +7,19 @@ from langchain_experimental.tools import PythonREPLTool
 from nodes.llm import llm_mini
 from tools.retriever_tool import *
 from tools.slack_tool import *
-from users.permission import *
 from utils.image import download_and_encode_image
+
+
+PERMISSION_NO = 0
+PERMISSION_USE = 1
+PERMISSION_SQL = 2
+PERMISSION_SOURCE_CODE = 3
+PERMISSION_ALL = 4
+
+
+def get_user_permission(user_id):
+    return PERMISSION_ALL
+
 
 python_tool = PythonREPLTool()
 python_tool.description = (

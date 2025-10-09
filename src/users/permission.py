@@ -1,9 +1,0 @@
-PERMISSION_NO = 0
-PERMISSION_USE = 1
-PERMISSION_SQL = 2
-PERMISSION_SOURCE_CODE = 3
-PERMISSION_ALL = 4
-
-
-def get_user_permission(user_id):
-    return PERMISSION_ALL
