@@ -5,27 +5,6 @@ import feedparser
 import schedule
 import time
 
-#
-# @dataclass
-# class Feed:
-#     url: str
-#     channel_id: str
-#     user_id: str
-#
-# hyun_feed = partial(Feed, channel_id="D086TAF545P", user_id="UA2TKHJPN")
-#
-#
-# feeds = [
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?playlist_id=PLH3j6V0I2cbnKkqBX2mjhjXpY_mWMZH-S"),
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCeN2YeJcBCRJoXgzF_OU3qw"),
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCXq7NNALDnqafn3KFvIyJKA"),
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCC3yfxS5qC6PCwDzetUuEWg"),
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCOB62fKRT7b73X7tRxMuN2g"),
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UC1Do3xw9OuUk7FQuPTmSVOw"),
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCWV2Uy79TOpB1bk8hnq1nGw"),
-#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCKTMvIu9a4VGSrpWy-8bUrQ"),
-# ]
-
 
 def run():
     insert_youtube_urls(db.YoutubeStatus.COMPLETED)  # ignore old feeds
