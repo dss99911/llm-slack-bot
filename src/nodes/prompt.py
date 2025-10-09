@@ -37,11 +37,11 @@ def system_prompt(event: SlackEvent):
     """
 
     if channel_system_prompt := db.select_one(db.Prompt, db.Prompt.channel_id == event.channel):
-        system_prompt += f"\n\n==Role Instruction\n{channel_system_prompt}"
+        system_prompt += f"\n\n==Role Instruction\n{channel_system_prompt.prompt}"
 
     if user_system_prompt:= db.select_one(db.Prompt, db.Prompt.slack_id == event.user):
         # some model doesn't allow multiple SystemMessage
-        system_prompt += f"\n\n==User Instruction==\n{user_system_prompt}"
+        system_prompt += f"\n\n==User Instruction==\n{user_system_prompt.prompt}"
 
     prompts = [SystemMessage(system_prompt, id=0)]
 
