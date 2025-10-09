@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from sqlalchemy import TIMESTAMP, func, Column, DateTime, Text, Enum
+from sqlalchemy import TIMESTAMP, func, Column, DateTime, Text, Enum, UniqueConstraint, Integer
 from sqlalchemy.orm import declarative_base
 
 from db.connection import engine
@@ -26,12 +26,16 @@ def ColumnUpdatedAt():
 
 class Prompt(Base):
     __tablename__ = "prompts"
-
-    slack_id = Column(Text, primary_key=True)
-    channel_id = Column(Text, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    slack_id = Column(Text)
+    channel_id = Column(Text)
     prompt = Column(Text)
     created_at = ColumnCreatedAt()
     updated_at = ColumnUpdatedAt()
+
+    __table_args__ = (
+        UniqueConstraint("slack_id", "channel_id", name="uq_prompts"),
+    )
 
 
 class YoutubeFeed(Base):
