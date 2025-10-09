@@ -1,36 +1,34 @@
-from db.youtube_urls import STATUS_COMPLETED
+import db
 from module.api import answer
 from utils.imports import *
 import feedparser
-from db import youtube_urls
 import schedule
 import time
 
+#
+# @dataclass
+# class Feed:
+#     url: str
+#     channel_id: str
+#     user_id: str
+#
+# hyun_feed = partial(Feed, channel_id="D086TAF545P", user_id="UA2TKHJPN")
+#
+#
+# feeds = [
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?playlist_id=PLH3j6V0I2cbnKkqBX2mjhjXpY_mWMZH-S"),
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCeN2YeJcBCRJoXgzF_OU3qw"),
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCXq7NNALDnqafn3KFvIyJKA"),
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCC3yfxS5qC6PCwDzetUuEWg"),
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCOB62fKRT7b73X7tRxMuN2g"),
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UC1Do3xw9OuUk7FQuPTmSVOw"),
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCWV2Uy79TOpB1bk8hnq1nGw"),
+#     hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCKTMvIu9a4VGSrpWy-8bUrQ"),
+# ]
 
-@dataclass
-class Feed:
-    url: str
-    channel_id: str
-    user_id: str
-
-hyun_feed = partial(Feed, channel_id="D086TAF545P", user_id="UA2TKHJPN")
-
-
-feeds = [
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?playlist_id=PLH3j6V0I2cbnKkqBX2mjhjXpY_mWMZH-S"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCeN2YeJcBCRJoXgzF_OU3qw"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCXq7NNALDnqafn3KFvIyJKA"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCC3yfxS5qC6PCwDzetUuEWg"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCOB62fKRT7b73X7tRxMuN2g"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UC1Do3xw9OuUk7FQuPTmSVOw"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCWV2Uy79TOpB1bk8hnq1nGw"),
-    hyun_feed("https://www.youtube.com/feeds/videos.xml?channel_id=UCKTMvIu9a4VGSrpWy-8bUrQ"),
-]
-
-url_cache = Cache()
 
 def run():
-    set_all_existing_url_completed()
+    insert_youtube_urls(db.YoutubeStatus.COMPLETED)  # ignore old feeds
     job()
     schedule.every(10).minutes.do(job)
 
@@ -40,40 +38,25 @@ def run():
 
 
 def job():
-    urls = fetch_new_youtube_urls()
+    insert_youtube_urls()
+    urls = db.select_all(db.YoutubeURL, db.YoutubeURL.status == db.YoutubeStatus.INSERTED)
     logging.info(f"youtube new urls: {len(urls)}")
     for url in urls:
-        res = slack.send_message(f"<@{url['user_id']}> {url['url']}", url['channel_id'])
-        answer(f"{url['url']}", url['user_id'], url['channel_id'], res['ts'])
-        youtube_urls.complete(url['url'], url['channel_id'], url['user_id'])
-
-def fetch_new_youtube_urls():
-    # read
-    urls = [(url, feed.channel_id, feed.user_id)
-            for feed in feeds
-            for url in fetch_youtube_urls(feed.url)]
-
-    # insert
-    new_urls = url_cache.filter_new(urls)
-    for url, channel_id, user_id in new_urls:
-        youtube_urls.insert(url, channel_id, user_id)
-
-    # cache
-    url_cache.add_values(new_urls)
-    url_cache.clean_old_values()
-
-    # get all
-    inserted_urls = youtube_urls.get_all_inserted()
-    return inserted_urls
+        res = slack.send_message(f"<@{url.user_id}> {url.url}", url.channel_id)
+        answer(f"{url.url}", url.user_id, url.channel_id, res['ts'])
+        url.status = db.YoutubeStatus.COMPLETED
+        db.upsert(url)
 
 
-def set_all_existing_url_completed():
-    urls = [(url, feed.channel_id, feed.user_id)
-            for feed in feeds
-            for url in fetch_youtube_urls(feed.url)]
-    for url, channel_id, user_id in urls:
-        youtube_urls.insert(url, channel_id, user_id, status=STATUS_COMPLETED)
-
+def insert_youtube_urls(status: db.YoutubeStatus = db.YoutubeStatus.INSERTED):
+    for feed in db.select_all(db.YoutubeFeed):
+        for url in fetch_youtube_urls(feed.url):
+            youtube_url = db.YoutubeURL(url=url, channel_id=feed.channel_id, user_id=feed.user_id, status=status)
+            try:
+                db.insert(youtube_url)
+            except db.IntegrityError:
+                # ignore if already exists
+                pass
 
 
 def fetch_youtube_urls(playlist_url):

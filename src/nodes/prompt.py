@@ -36,12 +36,10 @@ def system_prompt(event: SlackEvent):
     Ensure all responses follow these rules and maintain a professional yet approachable tone.
     """
 
-    channel_system_prompt = get_channel_system_prompt(event.channel)
-    if channel_system_prompt:
+    if channel_system_prompt := get_channel_system_prompt(event.channel):
         system_prompt += f"\n\n==Role Instruction\n{channel_system_prompt}"
 
-    user_system_prompt = get_user_system_prompt(event.user)
-    if user_system_prompt:
+    if user_system_prompt:= get_user_system_prompt(event.user):
         # some model doesn't allow multiple SystemMessage
         system_prompt += f"\n\n==User Instruction==\n{user_system_prompt}"
 

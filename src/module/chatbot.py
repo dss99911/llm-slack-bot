@@ -1,7 +1,6 @@
 from utils.imports import *
 from nodes.llm import llm_mini
 from utils.slack import slack_bot_token, slack_app_token
-from users.permission import get_user_permission, PERMISSION_NO
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from graph import stream_graph
@@ -94,9 +93,6 @@ def handle_event(event):
     logging.info(f"user: {slack_event.user_name}")
 
     try:
-        if get_user_permission(slack_event.user) == PERMISSION_NO:
-            return
-
         if slack_event.is_edited():
             return  # for conversation's consistency. not allow to answer on edited message.
 

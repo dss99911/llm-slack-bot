@@ -39,7 +39,6 @@ from utils.slack import SlackEvent, env
 from datetime import datetime
 # noinspection PyUnresolvedReferences
 import pytz
-from utils.cache import Cache
 
 
 prod = env == "prod"
